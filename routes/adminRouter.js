@@ -16,17 +16,17 @@ const router = express.Router();
 
 // Admin
 router.post("/login", loginAdmin);
-router.get("/profile", protect, getAdminProfile);
-router.put("/profile", protect, updateAdminProfile);
+router.get("/profile", protect,adminOnly, getAdminProfile);
+router.put("/profile", protect,adminOnly, updateAdminProfile);
 
 // Staff
-router.get("/staff", protect, getAllStaff);
-router.post("/staff", protect, createStaff);
-router.get("/staff/:id", protect, getStaffById);
-router.put("/staff/:id", protect, updateStaff);
-router.delete("/staff/:id", protect, deleteStaff);
+router.get("/staff", protect,adminOnly, getAllStaff);
+router.post("/staff", protect,adminOnly, createStaff);
+router.get("/staff/:id", protect,adminOnly, getStaffById);
+router.put("/staff/:id", protect,adminOnly, updateStaff);
+router.delete("/staff/:id", protect,adminOnly, deleteStaff);
 
 // Menu
-router.get("/menu/:id", protect, getMenuItemById);
+router.get("/menu/:id", protect,adminOnly, getMenuItemById);
 
 export default router;

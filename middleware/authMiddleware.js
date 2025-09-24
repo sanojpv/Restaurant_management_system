@@ -22,7 +22,7 @@ export const protect = async (req, res, next) => {
 // Admin only
 export const adminOnly = async (req, res, next) => {
   try {
-    const admin = await Admin.findById(req.adminId).select("-password");
+    const admin = await Admin.findById(req.userId).select("-password");
     if (!admin) return res.status(403).json({ message: "Access denied" });
     req.admin = admin;
     next();

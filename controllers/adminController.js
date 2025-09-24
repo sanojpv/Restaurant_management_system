@@ -45,7 +45,7 @@ export const updateAdminProfile = async (req, res) => {
     if (!updatedAdmin) {
       return res.status(404).json({ message: 'Admin not found' });
     }
-    res.status(200).json({ admin: updatedAdmin });
+    res.status(200).json({message:"Admin profile updated successfully", admin: updatedAdmin });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -95,7 +95,7 @@ export const updateStaff = async (req, res) => {
     if (!updatedStaff) {
       return res.status(404).json({ message: 'Staff member not found' });
     }
-    res.status(200).json({ staff: updatedStaff });
+    res.status(200).json({message: "Staff member updated successfully", staff: updatedStaff });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
