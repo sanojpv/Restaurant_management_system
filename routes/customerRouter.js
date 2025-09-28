@@ -3,7 +3,7 @@ import { customerOnly, protect } from '../middleware/authMiddleware.js';
 import { registerCustomer,loginCustomer,getCustomerProfile,updateCustomerProfile, deleteCustomerAccount, } from '../controllers/customerController.js';
 const router = express.Router();
 
-router.post('/',registerCustomer)
+router.post('/signup',registerCustomer)
 router.post('/login',protect,customerOnly,loginCustomer)
 router.get('/profile/:id',getCustomerProfile)
 router.patch('/profile/:id',updateCustomerProfile)

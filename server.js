@@ -1,5 +1,6 @@
 import express  from 'express';
 import dotenv from 'dotenv';
+import cors from 'cors'
 import connectDB from './config/databade.js';
 import adminRoutes from './routes/adminRouter.js';
 import staffRouter from './routes/staffRouter.js'
@@ -12,7 +13,7 @@ dotenv.config();
 connectDB();
 
 const app = express();
-
+app.use(cors())
 app.use(express.json());
 app.use('/api/admin', adminRoutes);
 app.use('/api/staff',staffRouter)

@@ -28,8 +28,13 @@ export const createPayment = async (req, res) => {
 
 // Get all payments for a customer
 export const getCustomerPayments = async (req, res) => {
+  const { id } = req.query; // Assuming customerId is passed as a query parameter
   try {
-    const payments = await Payment.find({ customerId: req.customer.id });
+    const payments = await Payment.find(id);
+if(payments.length === 0){
+  return res.status(404).json({message: "No Payments Found for this customer"})
+}
+
     res.status(200).json(payments);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
