@@ -4,7 +4,7 @@ import { registerCustomer,loginCustomer,getCustomerProfile,updateCustomerProfile
 const router = express.Router();
 
 router.post('/signup',registerCustomer)
-router.post('/login',protect,customerOnly,loginCustomer)
+router.post('/login',loginCustomer)
 router.get('/profile/:id',getCustomerProfile)
 router.patch('/profile/:id',updateCustomerProfile)
 router.delete('/profile',protect,customerOnly,deleteCustomerAccount)

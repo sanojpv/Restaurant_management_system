@@ -4,16 +4,16 @@ import Customer from "../models/customer.js";
 
 // Customer Registration
 export const registerCustomer = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email,phone, password } = req.body;
   try {
     const existingCustomer = await Customer.findOne({ email });
     if (existingCustomer) {
       return res.status(400).json({ message: 'Customer already exists' });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newCustomer = new Customer({ name, email, password: hashedPassword });
+    const newCustomer = new Customer({ name, email, phone,password: hashedPassword });
     await newCustomer.save();
-    const token = jwt.sign({ id: newCustomer._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: newCustomer._id }, process.env.JWT_SECRET, { expiresIn: '14d' });
     res.status(201).json({message:"registerCustomer successfully", token });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

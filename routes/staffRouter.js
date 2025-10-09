@@ -1,8 +1,9 @@
 import express from 'express';
-import { loginStaff, } from '../controllers/staffController.js';
+import { getStaffProfile, staffLogin, } from '../controllers/staffController.js';
 import { protect, staffOnly } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 
-router.post('/login',protect,staffOnly,loginStaff)
+router.post('/login',staffLogin)
+router.get('/profile',protect,staffOnly,getStaffProfile)
 export default router;

@@ -1,14 +1,29 @@
 import Menu from "../models/menu.js";
 
 // Create a new menu item
+
+
 export const createMenuItem = async (req, res) => {
-  const { name, description, price, category,image } = req.body;
   try {
-    const newMenuItem = new Menu({ name, description, price,category,image });
-    await newMenuItem.save();
-    res.status(201).json({ message: 'Menu item created successfully', menuItem: newMenuItem });
+    const { name, description, price, category } = req.body;
+    const image = req.file ? req.file.filename : null; // multer handles file
+
+    if (!name || !description || !price || !category) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const newMenu = await Menu.create({
+      name,
+      description,
+      price,
+      category,
+      image,
+    });
+
+    res.status(201).json(newMenu);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error creating menu item:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
