@@ -3,13 +3,13 @@ import Customer from "../models/customer.js";
 
 // Create a new reservation
 export const createReservation = async (req, res) => {
-  const { customerId, date, time, partySize } = req.body;
+  const { name,email, date, time, partySize } = req.body;
   try {
-    const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({ message: 'Customer not found' });
+    const existing = await Customer.findOne({date,date});
+    if (!existing) {
+      return res.status(404).json({ message: 'Table already reserved for this slot' });
     }
-    const newReservation = new Reservation({ customerId, date, time, partySize });
+    const newReservation = new Reservation({ customer:req.user._id,name,email, date, time, partySize });
     await newReservation.save();
     res.status(201).json({ message: 'Reservation created successfully', reservation: newReservation });
   } catch (error) {

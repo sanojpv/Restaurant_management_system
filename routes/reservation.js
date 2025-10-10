@@ -3,7 +3,7 @@ import { cancelReservation, createReservation, getAllReservations, getUserReserv
 
 const router = express.Router();
 
-router.post('/',createReservation)
+router.post('/create',createReservation)
 router.get('/:id',getUserReservation)
 router.get('/',getAllReservations);
 router.put('/:id',updateReservation);
