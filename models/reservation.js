@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 const reservationSchema = new mongoose.Schema(
   {
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: "customer", required: true },
+    name:{type:String,required:true},
+    email:{type:String},
     date: { type: Date, required: true },
     time: { type: String, required: true },
     partySize: { type: Number, required: true, min: 2, max: 12 },

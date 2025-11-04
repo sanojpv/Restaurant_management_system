@@ -1,77 +1,157 @@
+
+
+
+
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Customer from "../models/customer.js";
 
-// Customer Registration
+// Helper to sign JWT
+const signToken = (id, role) =>
+  jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: "30d" });
+
+// Register a new customer
 export const registerCustomer = async (req, res) => {
-  const { name, email,phone, password } = req.body;
+  const { name, email, phone, password } = req.body;
   try {
-    const existingCustomer = await Customer.findOne({ email });
-    if (existingCustomer) {
-      return res.status(400).json({ message: 'Customer already exists' });
-    }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newCustomer = new Customer({ name, email, phone,password: hashedPassword });
-    await newCustomer.save();
-    const token = jwt.sign({ id: newCustomer._id }, process.env.JWT_SECRET, { expiresIn: '14d' });
-    res.status(201).json({message:"registerCustomer successfully", token });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    const existing = await Customer.findOne({ email });
+    if (existing)
+      return res.status(400).json({ message: "Customer already exists" });
+
+    const hashed = await bcrypt.hash(password, 10);
+    const c = await Customer.create({ name, email, phone, password: hashed });
+
+    const token = signToken(c._id, "customer");
+    res.status(201).json({
+      message: "Registered successfully",
+      token,
+      customer: {
+        _id: c._id,
+        name: c.name,
+        email: c.email,
+        phone: c.phone,
+        role: "customer",
+      },
+    });
+  } catch (err) {
+    console.error("registerCustomer:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// Customer Login
+// Login customer
 export const loginCustomer = async (req, res) => {
-  const { email, password } = req.body;
   try {
+    const { email, password } = req.body;
     const customer = await Customer.findOne({ email });
-    if (!customer) {
-      return res.status(404).json({ message: 'Customer not found' });
-    }
-    const isMatch = await bcrypt.compare(password, customer.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-    const token = jwt.sign({ id: customer._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({message:"loginCustomer successfully", token });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    if (!customer)
+      return res.status(404).json({ message: "Customer not found" });
+
+    const ok = await bcrypt.compare(password, customer.password);
+    if (!ok) return res.status(400).json({ message: "Invalid password" });
+
+    const token = signToken(customer._id, "customer");
+
+    res.json({
+      message: "Login successful",
+      token,
+      customer: {
+        _id: customer._id,
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        role: "customer",
+      },
+    });
+  } catch (err) {
+    console.error("loginCustomer error:", err.message);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// Get Customer Profile
+// Get profile
 export const getCustomerProfile = async (req, res) => {
   try {
+    const customer = req.customer;
+    if (!customer)
+      return res.status(404).json({ message: "Customer not found" });
 
-    const customer = await Customer.findById(req.params.id);
-    if (!customer) {
-      return res.status(404).json({ message: 'Customer not found' });
-    }
-    res.status(200).json({message:"Profile fetched successfully", customer });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.json({ customer });
+  } catch (err) {
+    console.error("getCustomerProfile:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
-// Update Customer Profile
+
+// Update profile (name, email, phone)
 export const updateCustomerProfile = async (req, res) => {
-  const { name, email } = req.body;
   try {
-    const updatedCustomer = await Customer.findByIdAndUpdate(req.params.id, { name, email }, { new: true });
-    if (!updatedCustomer) {
-      return res.status(404).json({ message: 'Customer not found' });
-    }
-    res.status(200).json({ message: "Profile updated successfully", customer: updatedCustomer });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });  
+    const id = req.customer?._id;
+    if (!id) return res.status(400).json({ message: "Missing customer id" });
+
+    const customer = await Customer.findById(id);
+    if (!customer)
+      return res.status(404).json({ message: "Customer not found" });
+
+    const { name, email, phone } = req.body;
+    if (name !== undefined) customer.name = name;
+    if (email !== undefined) customer.email = email;
+    if (phone !== undefined) customer.phone = phone;
+
+    const updated = await customer.save();
+
+    res.json({
+      message: "Profile updated successfully",
+      customer: {
+        _id: updated._id,
+        name: updated.name,
+        email: updated.email,
+        phone: updated.phone,
+        role: "customer",
+      },
+    });
+  } catch (err) {
+    console.error("updateCustomerProfile:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// Delete Customer Account
+//  Update password
+export const updateCustomerPassword = async (req, res) => {
+  try {
+    const id = req.customer?._id;
+    if (!id) return res.status(400).json({ message: "Missing customer id" });
+
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters long" });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await Customer.findByIdAndUpdate(id, { password: hashed });
+
+    res.json({ message: "Password updated successfully" });
+  } catch (err) {
+    console.error("updateCustomerPassword:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+//  Delete account
 export const deleteCustomerAccount = async (req, res) => {
   try {
-    await Customer.findByIdAndDelete(req.customer.id);
-    res.status(200).json({ message: 'Customer account deleted successfully' , customer:req.customer.name});
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    const id = req.customer?._id;
+    if (!id) return res.status(400).json({ message: "Missing customer id" });
+
+    const deleted = await Customer.findByIdAndDelete(id);
+    if (!deleted)
+      return res.status(404).json({ message: "Customer not found" });
+
+    res.json({ message: "Account deleted successfully" });
+  } catch (err) {
+    console.error("deleteCustomerAccount:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };

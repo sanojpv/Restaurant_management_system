@@ -1,9 +1,12 @@
+
+
 import bcrypt from "bcryptjs";
 import Admin from "../models/admin.js";
 import jwt from "jsonwebtoken";
 import Staff from "../models/staff.js";
 import Menu from "../models/menu.js";
 import Customer from "../models/customer.js";
+import Order from "../models/order.js";
 
 //admin register
 export const registerAdmin = async (req, res) => {
@@ -32,6 +35,7 @@ export const loginAdmin = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "14d" }
     );
+
     res.status(200).json({ token, role: "admin", admin });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -41,7 +45,7 @@ export const loginAdmin = async (req, res) => {
 // Get Admin Profile
 export const getAdminProfile = async (req, res) => {
   try {
-    const admin = await Admin.findById(req.admin.id);
+    const admin = await Admin.findById(req.userId);
     if (!admin) {
       return res.status(404).json({ message: "Admin not found" });
     }
@@ -50,58 +54,115 @@ export const getAdminProfile = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-// Update Admin Profile
+
+
 export const updateAdminProfile = async (req, res) => {
   const { name, email } = req.body;
+
   try {
     const updatedAdmin = await Admin.findByIdAndUpdate(
-      req.admin.id,
+      req.email,
       { name, email },
       { new: true }
     );
+
     if (!updatedAdmin) {
       return res.status(404).json({ message: "Admin not found" });
     }
-    res
-      .status(200)
-      .json({
-        message: "Admin profile updated successfully",
-        admin: updatedAdmin,
-      });
+
+    res.status(200).json({
+      message: "Admin profile updated successfully",
+      admin: updatedAdmin,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 
-
-
-// Admin create staff
-export const createStaff = async (req, res) => {
-  const { name, email, password, role } = req.body;
-
+//  Get Dashboard Stats for Admin
+export const getDashboardStats = async (req, res) => {
   try {
+    const totalOrders = await Order.countDocuments();
+    const pendingOrders = await Order.countDocuments({ status: "pending" });
+    const totalMenuItems = await Menu.countDocuments();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const todayOrders = await Order.find({
+      createdAt: { $gte: today, $lt: tomorrow },
+    });
+
+    const revenueToday = todayOrders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
+
+    const recentOrders = await Order.find()
+      .populate("customerId", "name")
+      .sort({ _id: -1 })
+      .limit(5);
+
+    res.status(200).json({
+      totalOrders,
+      pendingOrders,
+      totalMenuItems,
+      revenueToday,
+      recentOrders,
+    });
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    res.status(500).json({ message: "Error fetching dashboard stats" });
+  }
+};
+
+export const createStaff = async (req, res) => {
+  try {
+    const { name, email, password, role, position } = req.body;
+
+    //  Validate input
+    if (!name || !email || !password || !role || !position) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    //  Check existing email
     const existingStaff = await Staff.findOne({ email });
     if (existingStaff) {
       return res.status(400).json({ message: "Staff already exists" });
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newStaff = new Staff({ name, email, password: hashedPassword, role });
+
+    //  Create new staff record
+    const newStaff = new Staff({
+      name,
+      email,
+      password: hashedPassword,
+      position: position, // e.g., 'waiter', 'chef'
+      role, // now saves waiter, chef, etc.
+      userRole: "staff",
+    });
+
     await newStaff.save();
 
     res.status(201).json({
       message: "Staff created successfully",
-      staff: newStaff,
+      staff: {
+        id: newStaff._id,
+        name: newStaff.name,
+        email: newStaff.email,
+        role: newStaff.role,
+      },
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    console.error("Error creating staff:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
-
-
-
 
 // Get all staff members
 export const getAllStaff = async (req, res) => {
@@ -112,15 +173,6 @@ export const getAllStaff = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
-
-
-
-
-
-
-
 
 // Delete a staff member
 export const deleteStaff = async (req, res) => {
@@ -136,15 +188,6 @@ export const deleteStaff = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-
-
-
 // Get a single staff member by ID
 export const getStaffById = async (req, res) => {
   const { id } = req.params;
@@ -159,15 +202,6 @@ export const getStaffById = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-
-
-
 // Update a staff member
 export const updateStaff = async (req, res) => {
   const { id } = req.params;
@@ -181,23 +215,14 @@ export const updateStaff = async (req, res) => {
     if (!updatedStaff) {
       return res.status(404).json({ message: "Staff member not found" });
     }
-    res
-      .status(200)
-      .json({
-        message: "Staff member updated successfully",
-        staff: updatedStaff,
-      });
+    res.status(200).json({
+      message: "Staff member updated successfully",
+      staff: updatedStaff,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
-
-
-
-
-
 
 // Get a single menu item by ID
 export const getMenuItemById = async (req, res) => {
@@ -213,9 +238,6 @@ export const getMenuItemById = async (req, res) => {
   }
 };
 
-
-
-
 // Create Menu Item Controller
 export const createMenuItem = async (req, res) => {
   try {
@@ -227,7 +249,7 @@ export const createMenuItem = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
     console.log("req.file:", req.file);
-console.log("req.body:", req.body);
+    console.log("req.body:", req.body);
 
     const menuItem = await Menu.create({
       name,
@@ -243,14 +265,6 @@ console.log("req.body:", req.body);
     res.status(500).json({ message: "Server Error" });
   }
 };
-
-
-
-
-
-
-
-
 
 // Get all menu items grouped by category
 export const getAllMenuItems = async (req, res) => {
@@ -272,12 +286,6 @@ export const getAllMenuItems = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
 //get all customers
 export const getAllCustomers = async (req, res) => {
   try {
@@ -296,11 +304,11 @@ export const getAllCustomers = async (req, res) => {
       customers: customers,
     });
   } catch (error) {
-    // 4. Handle errors (e.g., database connection issues, internal server errors)
     console.error("Error fetching all customers for admin:", error.message);
     res.status(500).json({
       message: "Server error while retrieving customers.",
-      error: error.message, // Good for debugging, but be cautious exposing this in production
+      error: error.message,
     });
   }
 };
+

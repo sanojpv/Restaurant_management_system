@@ -1,56 +1,79 @@
+
+
 import jwt from "jsonwebtoken";
 import Admin from "../models/admin.js";
 import Staff from "../models/staff.js";
 import Customer from "../models/customer.js";
 
-// Common protect middleware (check token & decode)
+// Common JWT check
 export const protect = async (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1]; // Expected format: Bearer <token>
-  
+ try {
+  const authHeader = req.headers.authorization || "";
+  if (!authHeader.startsWith("Bearer ")) {
+   return res.status(401).json({ message: "No token, authorization denied" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+  if (!decoded?.id) {
+   return res.status(401).json({ message: "Invalid token payload" });
+  }
+
+  let user = null;
+  if (decoded.role === "admin") {
+   user = await Admin.findById(decoded.id).select("-password");
+  } else if (decoded.role === "staff") {
+   user = await Staff.findById(decoded.id).select("-password");
+  } else if (decoded.role === "customer") {
+   user = await Customer.findById(decoded.id).select("-password");
+  }
+
+  if (!user) return res.status(401).json({ message: "User not found" });
+
+  req.user = user;
+  req.userId = decoded.id;
+  req.userRole = decoded.role;
+  next();
+ } catch (err) {
+  console.error("protect error:", err);
+  res.status(401).json({ message: "Not authorized, token failed" });
+ }
+};
+
+
+export const protectCustomer = async (req, res, next) => {
+ try {
+  const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ message: "No token provided" });
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = decoded.id; // store id for later use
-   
-    next();
-  } catch (error) {
-    res.status(401).json({ message: "Invalid token" });
-  }
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  const customer = await Customer.findById(decoded.id).select("-password");
+
+  if (!customer)
+   return res.status(403).json({ message: "Access denied — Customers only" });
+
+  req.customer = customer;
+  req.userId = decoded.id;
+  req.userRole = "customer";
+  next();
+ } catch (err) {
+  console.error("protectCustomer error:", err);
+  res.status(401).json({ message: "Invalid or expired token" });
+ }
 };
 
-// Admin only
-export const adminOnly = async (req, res, next) => {
-  try {
-    const admin = await Admin.findById(req.userId).select("-password");
-    if (!admin) return res.status(403).json({ message: "Access denied" });
-    req.admin = admin;
-    next();
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
+export const adminOnly = (req, res, next) => {
+ if (req.userRole === "admin") return next();
+ return res.status(403).json({ message: "Access denied — Admin only" });
 };
 
-// Staff only
-export const staffOnly = async (req, res, next) => {
-  try {
-    const staff = await Staff.findById(req.userId).select("-password");
-    if (!staff) return res.status(403).json({ message: "Access denied" });
-    req.staff = staff;
-    next();
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
+export const staffOnly = (req, res, next) => {
+ if (req.userRole === "staff") return next();
+ return res.status(403).json({ message: "Access denied — Staff only" });
 };
 
-// Customer only
-export const customerOnly = async (req, res, next) => {
-  try {
-    const customer = await Customer.findById(req.userId).select("-password");
-    if (!customer) return res.status(403).json({ message: "Access denied" });
-    req.customer = customer;
-    next();
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
+export const customerOnly = (req, res, next) => {
+ if (req.userRole === "customer") return next();
+ return res.status(403).json({ message: "Access denied — Customer only" });
 };

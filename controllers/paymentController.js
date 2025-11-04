@@ -28,7 +28,7 @@ export const createPayment = async (req, res) => {
 
 // Get all payments for a customer
 export const getCustomerPayments = async (req, res) => {
-  const { id } = req.query; // Assuming customerId is passed as a query parameter
+  const { id } = req.query; 
   try {
     const payments = await Payment.find(id);
 if(payments.length === 0){

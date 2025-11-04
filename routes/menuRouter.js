@@ -1,16 +1,24 @@
+
 import express from 'express';
-import { createMenuItem, deleteMenuItem, getMenuItems, updateMenuItem } from '../controllers/menuController.js';
-import { getMenuItemById } from '../controllers/adminController.js';
+import { 
+  createMenuItem, 
+  deleteMenuItem, 
+  getMenuItems, 
+  updateMenuItem,
+  getMenuItemById
+} from '../controllers/menuController.js';
 
-const router=express.Router()
+import upload from '../middleware/upload.js'; 
 
-router.get('/getmenu',getMenuItems)
-router.get('/:id',getMenuItemById)
-router.post('/',createMenuItem);
-router.put('/:id',updateMenuItem)
-router.delete('/:id',deleteMenuItem)
+const router = express.Router();
 
+router.get("/getmenu", getMenuItems);
+router.get('/:id', getMenuItemById);
 
+router.post('/', upload.single('image'), createMenuItem); 
 
+router.put('/:id', upload.single('image'), updateMenuItem); 
+
+router.delete('/:id', deleteMenuItem);
 
 export default router;
