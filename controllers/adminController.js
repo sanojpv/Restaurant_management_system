@@ -80,30 +80,53 @@ export const updateAdminProfile = async (req, res) => {
 };
 
 
-//  Get Dashboard Stats for Admin
+
+
+
+// Get Dashboard Stats for Admin
 export const getDashboardStats = async (req, res) => {
   try {
     const totalOrders = await Order.countDocuments();
-    const pendingOrders = await Order.countDocuments({ status: "pending" });
+    const pendingOrders = await Order.countDocuments({ status: "Pending" });
     const totalMenuItems = await Menu.countDocuments();
 
+    //  Revenue Today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
     const todayOrders = await Order.find({
+      status: "Confirmed", // Only count completed orders for revenue
       createdAt: { $gte: today, $lt: tomorrow },
     });
 
     const revenueToday = todayOrders.reduce(
-      (sum, order) => sum + order.totalAmount,
+      (sum, order) => sum + (order.totalAmount || 0), // Safely sum totalAmount
       0
     );
 
+    // Monthly Revenue 
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const startOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+
+    const monthOrders = await Order.find({
+        status: "Confirmed", // Only count completed orders for revenue
+        createdAt: { $gte: startOfMonth, $lt: startOfNextMonth },
+    });
+
+    const revenueMonth = monthOrders.reduce(
+        (sum, order) => sum + (order.totalAmount || 0),
+        0
+    );
+
+    //Recent Orders
     const recentOrders = await Order.find()
-      .populate("customerId", "name")
-      .sort({ _id: -1 })
+      .populate({
+        path: "customerId",
+        select: "name", 
+      })
+      .sort({ createdAt: -1 }) // Sort by creation time, not ID
       .limit(5);
 
     res.status(200).json({
@@ -111,6 +134,7 @@ export const getDashboardStats = async (req, res) => {
       pendingOrders,
       totalMenuItems,
       revenueToday,
+      revenueMonth, 
       recentOrders,
     });
   } catch (error) {

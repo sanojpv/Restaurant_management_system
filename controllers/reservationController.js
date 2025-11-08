@@ -1,18 +1,24 @@
-
 import { Reservation } from "../models/reservation.js";
 import Customer from "../models/customer.js";
 
 // Create a new reservation
 export const createReservation = async (req, res) => {
   try {
-    const { name, email, phone, date, time, partySize } = req.body;
+    const { date, time, partySize } = req.body;
     const customerId = req.customer?._id || req.userId;
 
     if (!customerId) {
       return res.status(401).json({ message: "Unauthorized: Login required" });
     }
 
-    
+    const customer = await Customer.findById(customerId);
+
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    const { name, email } = customer;
+
     const reservationDate = date ? new Date(date) : null;
 
     // simple conflict check - same datetime
@@ -31,7 +37,6 @@ export const createReservation = async (req, res) => {
       customerId,
       name,
       email,
-      phone,
       date: reservationDate,
       time,
       partySize,
@@ -49,7 +54,7 @@ export const createReservation = async (req, res) => {
   }
 };
 
-// Get reservations for the currently authenticated customer 
+// Get reservations for the currently authenticated customer
 export const getUserReservation = async (req, res) => {
   try {
     const customerId = req.customer?._id || req.userId;
@@ -64,14 +69,18 @@ export const getUserReservation = async (req, res) => {
     res.status(200).json({ reservations });
   } catch (err) {
     console.error("getUserReservation error:", err);
-    res.status(500).json({ message: "Failed to fetch reservations", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch reservations", error: err.message });
   }
 };
 
 // Admin: Get all reservations
 export const getAllReservations = async (req, res) => {
   try {
-    const reservations = await Reservation.find().populate("customerId", "name email").lean();
+    const reservations = await Reservation.find()
+      .populate("customerId", "name email")
+      .lean();
     res.status(200).json({ reservations });
   } catch (error) {
     console.error("getAllReservations error:", error);
@@ -96,9 +105,12 @@ export const updateReservation = async (req, res) => {
       runValidators: true,
     });
 
-    if (!updated) return res.status(404).json({ message: "Reservation not found" });
+    if (!updated)
+      return res.status(404).json({ message: "Reservation not found" });
 
-    res.status(200).json({ message: "Updated successfully", reservation: updated });
+    res
+      .status(200)
+      .json({ message: "Updated successfully", reservation: updated });
   } catch (error) {
     console.error("updateReservation error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
@@ -111,11 +123,14 @@ export const cancelReservation = async (req, res) => {
     const { id } = req.params;
 
     const reservation = await Reservation.findById(id);
-    if (!reservation) return res.status(404).json({ message: "Reservation not found" });
+    if (!reservation)
+      return res.status(404).json({ message: "Reservation not found" });
 
     const customerId = req.customer?._id?.toString() || req.userId;
     if (reservation.customerId.toString() !== customerId) {
-      return res.status(403).json({ message: "Not authorized to cancel this reservation" });
+      return res
+        .status(403)
+        .json({ message: "Not authorized to cancel this reservation" });
     }
 
     await Reservation.findByIdAndDelete(id);
@@ -125,4 +140,3 @@ export const cancelReservation = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-

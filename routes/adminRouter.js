@@ -20,28 +20,28 @@ import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
-// ✅ Admin Auth
+//  Admin Auth
 router.post("/register", registerAdmin);
 router.post("/login", loginAdmin);
 
-// ✅ Admin Profile
+// Admin Profile
 router.get("/profile", protect, adminOnly, getAdminProfile);
 router.put("/profile/:id", updateAdminProfile);
 
-// ✅ Staff Management
+//  Staff Management
 router.get("/staff", protect, adminOnly, getAllStaff);
 router.post("/staff", protect, adminOnly, createStaff);
 router.get("/staff/:id", protect, adminOnly, getStaffById);
 router.put("/staff/:id", protect, adminOnly, updateStaff);
 router.delete("/staff/:id", protect, adminOnly, deleteStaff);
 
-// ✅ Customers
+// Customers
 router.get("/customer", protect, adminOnly, getAllCustomers);
 
-// ✅ Dashboard
+//  Dashboard
 router.get("/dashboard", protect, adminOnly, getDashboardStats);
 
-// ✅ Menu
+//  Menu
 router.post("/menu/create", protect, adminOnly, upload.single("image"), createMenuItem);
 router.put('/:id', protect, adminOnly, updateMenuItem); 
 router.delete('/:id', protect, adminOnly, deleteMenuItem);
