@@ -9,7 +9,8 @@ import {
   rejectOrder, 
   getPendingReservations, 
   acceptReservation,
-  declineReservation, 
+  declineReservation,
+  getAllOrders, 
 } from "../controllers/staffController.js";
 import { protect, staffOnly } from "../middleware/authMiddleware.js";
 
@@ -23,7 +24,7 @@ router.put("/profile/:id", protect, staffOnly, updateStaffProfile);
 router.get("/orders/new", protect, staffOnly, getNewOrders); 
 router.put("/orders/:id/accept", protect, staffOnly, acceptOrder); 
 router.put("/orders/:id/reject", protect, staffOnly, rejectOrder); 
-
+router.get("/orders/all",protect,staffOnly,getAllOrders)
 // Reservations
 router.get("/reservations/new", protect, staffOnly, getPendingReservations); 
 router.put("/reservations/:id/accept", protect, staffOnly, acceptReservation); 
