@@ -5,7 +5,8 @@ const menuSchema = new mongoose.Schema({
   description: { type: String, required: true },
   price: { type: Number, required: true },
   category: { type: String, required: true },
-  image: { type: String, required: true }, // image required
+  image: { type: String, required: true },
+  isAvailable: { type: Boolean, default: true }, 
 });
 
 const Menu = mongoose.model("Menu", menuSchema);

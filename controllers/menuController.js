@@ -60,23 +60,19 @@ export const updateMenuItem = async (req, res) => {
       return res.status(404).json({ message: "Menu item not found" });
     }
 
-    res
-      .status(200)
-      .json({
-        message: "Menu item updated successfully",
-        menuItem: updatedMenuItem,
-      });
+    res.status(200).json({
+      message: "Menu item updated successfully",
+      menuItem: updatedMenuItem,
+    });
   } catch (error) {
     console.error("Error updating menu item:", error);
 
     //  error message for validation failures
     if (error.name === "CastError" || error.name === "ValidationError") {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Invalid data format (e.g., price must be a number) or missing required fields.",
-        });
+      return res.status(400).json({
+        message:
+          "Invalid data format (e.g., price must be a number) or missing required fields.",
+      });
     }
 
     res
@@ -108,6 +104,32 @@ export const getMenuItemById = async (req, res) => {
     }
     res.status(200).json({ menuItem });
   } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// update availability status of a menu item
+
+export const updateAvailability = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isAvailable } = req.body;
+
+    const updatedItem = await Menu.findByIdAndUpdate(
+      id,
+      { isAvailable },
+      { new: true }
+    );
+
+    if (!updatedItem)
+      return res.status(404).json({ message: "Menu item not found" });
+
+    res.status(200).json({
+      message: "Availability updated successfully",
+      menuItem: updatedItem,
+    });
+  } catch (error) {
+    console.error("Error updating availability:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

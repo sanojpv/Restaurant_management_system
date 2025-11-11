@@ -5,7 +5,8 @@ import {
   deleteMenuItem, 
   getMenuItems, 
   updateMenuItem,
-  getMenuItemById
+  getMenuItemById,
+  updateAvailability
 } from '../controllers/menuController.js';
 
 import upload from '../middleware/upload.js'; 
@@ -16,9 +17,7 @@ router.get("/getmenu", getMenuItems);
 router.get('/:id', getMenuItemById);
 
 router.post('/', upload.single('image'), createMenuItem); 
-
-router.put('/:id', upload.single('image'), updateMenuItem); 
-
+router.put('/:id', upload.single('image'), updateMenuItem);
+router.put('/:id/availability', updateAvailability);
 router.delete('/:id', deleteMenuItem);
-
 export default router;
