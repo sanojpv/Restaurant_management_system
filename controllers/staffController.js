@@ -173,13 +173,37 @@ export const cancelCodOrder = async (req, res) => {
 };
 
 // Pending reservations
+
 export const getPendingReservations = async (req, res) => {
   try {
     const reservations = await Reservation.find({ status: "pending" }).sort({
       date: 1,
       time: 1,
     });
-    res.status(200).json({ reservations });
+
+    // Combine date + time → single ISO string (reservationTime)
+    const formatted = reservations.map((r) => {
+      let dateTime = null;
+
+      if (r.date && r.time) {
+        const datePart = new Date(r.date);
+        // Combine into a full ISO datetime string
+        const [hours, minutes] = r.time.split(":");
+        datePart.setHours(Number(hours), Number(minutes), 0, 0);
+        dateTime = datePart;
+      }
+
+      return {
+        _id: r._id,
+        name: r.name,
+        email: r.email,
+        partySize: r.partySize,
+        status: r.status,
+        reservationTime: dateTime,
+      };
+    });
+
+    res.status(200).json({ reservations: formatted });
   } catch (error) {
     console.error("getPendingReservations error:", error);
     res.status(500).json({ message: "Server error fetching reservations." });
