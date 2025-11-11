@@ -1,5 +1,3 @@
-
-
 import bcrypt from "bcryptjs";
 import Admin from "../models/admin.js";
 import jwt from "jsonwebtoken";
@@ -8,7 +6,7 @@ import Menu from "../models/menu.js";
 import Customer from "../models/customer.js";
 import Order from "../models/order.js";
 
-//admin register
+// Admin Register
 export const registerAdmin = async (req, res) => {
   const { name, email, role, password } = req.body;
   try {
@@ -20,7 +18,8 @@ export const registerAdmin = async (req, res) => {
     res.status(500).json({ message: "admin reg error", error });
   }
 };
-//admin login
+
+// Admin Login
 export const loginAdmin = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -55,7 +54,7 @@ export const getAdminProfile = async (req, res) => {
   }
 };
 
-
+// Update Admin Profile
 export const updateAdminProfile = async (req, res) => {
   const { name, email } = req.body;
 
@@ -79,54 +78,59 @@ export const updateAdminProfile = async (req, res) => {
   }
 };
 
-
-
-
-
-// Get Dashboard Stats for Admin
+// Dashboard Stats
 export const getDashboardStats = async (req, res) => {
   try {
     const totalOrders = await Order.countDocuments();
     const pendingOrders = await Order.countDocuments({ status: "Pending" });
     const totalMenuItems = await Menu.countDocuments();
 
-    //  Revenue Today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
+    // Include both Confirmed and Delivered orders for revenue
     const todayOrders = await Order.find({
-      status: "Confirmed", // Only count completed orders for revenue
+      status: { $in: ["Confirmed", "Delivered"] },
       createdAt: { $gte: today, $lt: tomorrow },
     });
 
     const revenueToday = todayOrders.reduce(
-      (sum, order) => sum + (order.totalAmount || 0), // Safely sum totalAmount
+      (sum, order) => sum + (order.totalAmount || order.totalPrice || 0),
       0
     );
 
-    // Monthly Revenue 
+    // Monthly Revenue
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const startOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
 
     const monthOrders = await Order.find({
-        status: "Confirmed", // Only count completed orders for revenue
-        createdAt: { $gte: startOfMonth, $lt: startOfNextMonth },
+      status: { $in: ["Confirmed", "Delivered"] },
+      createdAt: { $gte: startOfMonth, $lt: startOfNextMonth },
     });
 
     const revenueMonth = monthOrders.reduce(
-        (sum, order) => sum + (order.totalAmount || 0),
-        0
+      (sum, order) => sum + (order.totalAmount || order.totalPrice || 0),
+      0
     );
 
-    //Recent Orders
+    // Total Revenue (All Time)
+    const allOrders = await Order.find({
+      status: { $in: ["Confirmed", "Delivered"] },
+    });
+    const totalRevenue = allOrders.reduce(
+      (sum, order) => sum + (order.totalAmount || order.totalPrice || 0),
+      0
+    );
+
+    // Recent Orders
     const recentOrders = await Order.find()
       .populate({
         path: "customerId",
-        select: "name", 
+        select: "name",
       })
-      .sort({ createdAt: -1 }) // Sort by creation time, not ID
+      .sort({ createdAt: -1 })
       .limit(5);
 
     res.status(200).json({
@@ -134,7 +138,8 @@ export const getDashboardStats = async (req, res) => {
       pendingOrders,
       totalMenuItems,
       revenueToday,
-      revenueMonth, 
+      revenueMonth,
+      totalRevenue,
       recentOrders,
     });
   } catch (error) {
@@ -143,31 +148,28 @@ export const getDashboardStats = async (req, res) => {
   }
 };
 
+// Create Staff
 export const createStaff = async (req, res) => {
   try {
     const { name, email, password, role, position } = req.body;
 
-    //  Validate input
     if (!name || !email || !password || !role || !position) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    //  Check existing email
     const existingStaff = await Staff.findOne({ email });
     if (existingStaff) {
       return res.status(400).json({ message: "Staff already exists" });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    //  Create new staff record
     const newStaff = new Staff({
       name,
       email,
       password: hashedPassword,
-      position: position, // e.g., 'waiter', 'chef'
-      role, // now saves waiter, chef, etc.
+      position,
+      role,
       userRole: "staff",
     });
 
@@ -188,7 +190,7 @@ export const createStaff = async (req, res) => {
   }
 };
 
-// Get all staff members
+// Get all staff
 export const getAllStaff = async (req, res) => {
   try {
     const staffMembers = await Staff.find();
@@ -198,7 +200,7 @@ export const getAllStaff = async (req, res) => {
   }
 };
 
-// Delete a staff member
+// Delete staff
 export const deleteStaff = async (req, res) => {
   const { id } = req.params;
   try {
@@ -212,7 +214,7 @@ export const deleteStaff = async (req, res) => {
   }
 };
 
-// Get a single staff member by ID
+// Get single staff
 export const getStaffById = async (req, res) => {
   const { id } = req.params;
   try {
@@ -226,7 +228,7 @@ export const getStaffById = async (req, res) => {
   }
 };
 
-// Update a staff member
+// Update staff
 export const updateStaff = async (req, res) => {
   const { id } = req.params;
   const { name, email } = req.body;
@@ -248,7 +250,7 @@ export const updateStaff = async (req, res) => {
   }
 };
 
-// Get a single menu item by ID
+// Get menu item by ID
 export const getMenuItemById = async (req, res) => {
   const { id } = req.params;
   try {
@@ -262,18 +264,15 @@ export const getMenuItemById = async (req, res) => {
   }
 };
 
-// Create Menu Item Controller
+// Create menu item
 export const createMenuItem = async (req, res) => {
   try {
-    // multer puts text fields in req.body and file in req.file
     const { name, description, price, category } = req.body;
     const image = req.file ? req.file.filename : null;
 
     if (!name || !description || !price || !category) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    console.log("req.file:", req.file);
-    console.log("req.body:", req.body);
 
     const menuItem = await Menu.create({
       name,
@@ -295,7 +294,6 @@ export const getAllMenuItems = async (req, res) => {
   try {
     const menuItems = await Menu.find();
 
-    // Group by category
     const grouped = menuItems.reduce((acc, item) => {
       const cat = item.category || "Others";
       if (!acc[cat]) acc[cat] = [];
@@ -310,19 +308,17 @@ export const getAllMenuItems = async (req, res) => {
   }
 };
 
-//get all customers
+// Get all customers
 export const getAllCustomers = async (req, res) => {
   try {
     const customers = await Customer.find();
 
-    //  Check if any customers were found
     if (!customers || customers.length === 0) {
       return res.status(404).json({
         message: "No customers found.",
       });
     }
 
-    //  Send a success response with the customer data
     res.status(200).json({
       count: customers.length,
       customers: customers,
@@ -335,4 +331,3 @@ export const getAllCustomers = async (req, res) => {
     });
   }
 };
-
