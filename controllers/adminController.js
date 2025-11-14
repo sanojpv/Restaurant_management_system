@@ -55,12 +55,39 @@ export const getAdminProfile = async (req, res) => {
 };
 
 // Update Admin Profile
+// export const updateAdminProfile = async (req, res) => {
+//   const { name, email } = req.body;
+
+//   try {
+//     const updatedAdmin = await Admin.findByIdAndUpdate(
+//       req.email,
+//       { name, email },
+//       { new: true }
+//     );
+
+//     if (!updatedAdmin) {
+//       return res.status(404).json({ message: "Admin not found" });
+//     }
+
+//     res.status(200).json({
+//       message: "Admin profile updated successfully",
+//       admin: updatedAdmin,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
+
+
+
+
 export const updateAdminProfile = async (req, res) => {
   const { name, email } = req.body;
+  const { id } = req.params;
 
   try {
     const updatedAdmin = await Admin.findByIdAndUpdate(
-      req.email,
+      id,
       { name, email },
       { new: true }
     );
@@ -74,9 +101,31 @@ export const updateAdminProfile = async (req, res) => {
       admin: updatedAdmin,
     });
   } catch (error) {
+    console.error("updateAdminProfile error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Dashboard Stats
 export const getDashboardStats = async (req, res) => {
