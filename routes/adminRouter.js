@@ -26,7 +26,7 @@ router.post("/login", loginAdmin);
 
 // Admin Profile
 router.get("/profile", protect, adminOnly, getAdminProfile);
-router.put("/profile",updateAdminProfile);
+router.put("/profile/:id",updateAdminProfile);
 
 //  Staff Management
 router.get("/staff", protect, adminOnly, getAllStaff);
