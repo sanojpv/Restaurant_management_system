@@ -14,19 +14,6 @@ import paymentRoutes from "./routes/paymentRouter.js";
 import reservationRoutes from "./routes/reservationRouter.js";
 import authRouter from "./routes/authRoutes.js";
 import cartRouter from "./routes/cartRouter.js"; 
-import path from "path";
-import { fileURLToPath } from "url";
-
-
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
-});
 
 dotenv.config();
 connectDB();
