@@ -23,7 +23,7 @@ app.use(cors());
 app.use(express.json());
 
 // Static uploads folder
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+// app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 // app.get("/", (req, res) => {
 //   res.send("API is running...");
 // });
@@ -37,6 +37,7 @@ app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/reservation", reservationRoutes);
+app.use("/uploads", express.static("uploads"));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
