@@ -1,4 +1,3 @@
-
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -13,7 +12,7 @@ import orderRoutes from "./routes/orderRouter.js";
 import paymentRoutes from "./routes/paymentRouter.js";
 import reservationRoutes from "./routes/reservationRouter.js";
 import authRouter from "./routes/authRoutes.js";
-import cartRouter from "./routes/cartRouter.js"; 
+import cartRouter from "./routes/cartRouter.js";
 
 dotenv.config();
 connectDB();
@@ -35,7 +34,7 @@ app.use("/api/staff", staffRouter);
 app.use("/api/customer", customerRoutes);
 app.use("/api/menu", menuRoutes);
 app.use("/api/cart", cartRouter);
-app.use("/api/orders",orderRoutes); 
+app.use("/api/orders", orderRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/reservation", reservationRoutes);
 
