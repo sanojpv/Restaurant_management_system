@@ -19,14 +19,26 @@ connectDB();
 
 const app = express();
 
-app.use(cors());
+// app.use(cors());
 app.use(express.json());
 
-// Static uploads folder
-// app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
-// app.get("/", (req, res) => {
-//   res.send("API is running...");
-// });
+
+
+// ഫ്രണ്ട്എൻഡ് ഡൊമെയ്‌നിന് മാത്രം അനുമതി നൽകുന്നു
+const allowedOrigins = ['https://restaurant-management-system-fronte-eight.vercel.app'];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // റിക്വസ്റ്റ് വരുന്നത് അനുവദനീയമായ ഡൊമെയ്‌നുകളിൽ നിന്നോ 
+    // അല്ലെങ്കിൽ ബ്രൗസറിൽ നിന്ന് origin ഇല്ലാത്ത റിക്വസ്റ്റോ (ഉദാഹരണത്തിന് Postman) ആണോ എന്ന് പരിശോധിക്കുന്നു
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true // Cookies/Session ID-കൾ അയക്കാൻ ഇത് ആവശ്യമാണ്
+}));
 // Routes
 app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRoutes);
