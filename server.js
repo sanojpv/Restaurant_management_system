@@ -89,16 +89,15 @@ dotenv.config();
 
 
 
-
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 connectDB();
 
 const app = express();
-
-app.use(express.json());
-
-// const allowedOrigins = ['https://restaurant-management-system-fronte-eight.vercel.app'];
-
 
 
 app.use(
@@ -108,6 +107,10 @@ app.use(
     credentials: true,
   })
 );
+app.use(express.json());
+
+
+
 
 // Routes
 app.use("/api/auth", authRouter);
