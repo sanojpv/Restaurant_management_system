@@ -84,16 +84,17 @@ import paymentRoutes from "./routes/paymentRouter.js";
 import reservationRoutes from "./routes/reservationRouter.js";
 import authRouter from "./routes/authRoutes.js";
 import cartRouter from "./routes/cartRouter.js";
-
+import cloudinary from "./config/cloudinary.js";
 dotenv.config();
 
+cloudinary.config()
 //Configure Cloudinary here immediately after loading .env
 // This prevents crashes (502 errors) when upload.js is initialized or used.
-// cloudinary.config({
-//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-//   api_key: process.env.CLOUDINARY_API_KEY,
-//   api_secret: process.env.CLOUDINARY_API_SECRET
-// });
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 
 connectDB();
