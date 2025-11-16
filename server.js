@@ -103,18 +103,16 @@ const app = express();
 
 app.use(express.json());
 
-const allowedOrigins = ['https://restaurant-management-system-fronte-eight.vercel.app'];
+// const allowedOrigins = ['https://restaurant-management-system-fronte-eight.vercel.app'];
+
+
 
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true
+  origin: "https://restaurant-management-system-fronte-eight.vercel.app",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
 }));
+
 // Routes
 app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRoutes);
