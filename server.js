@@ -89,7 +89,7 @@ dotenv.config();
 
 
 
-cloudinary.config();
+cloudinary();
 
 connectDB();
 
