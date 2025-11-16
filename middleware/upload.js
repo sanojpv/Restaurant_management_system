@@ -4,9 +4,8 @@
 // /middleware/upload.js
 
 import multer from "multer";
-import { v2 as cloudinary } from 'cloudinary'; 
 import pkg from 'multer-storage-cloudinary';
-
+import cloudinary from "../config/cloudinary.js"
 const CloudinaryStorage = pkg.CloudinaryStorage || pkg; 
 
 // Configure Cloudinary storage

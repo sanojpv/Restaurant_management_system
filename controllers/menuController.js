@@ -8,7 +8,7 @@ export const createMenuItem = async (req, res) => {
       return res.status(400).json({ message: "Image is required" });
     }
 
-    const imageUrl = req.file.path; // Cloudinary URL
+const imageUrl = req.file.path;
 
     const menuItem = await Menu.create({
       name,
