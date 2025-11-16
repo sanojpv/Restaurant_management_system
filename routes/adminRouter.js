@@ -42,7 +42,7 @@ router.get("/customer", protect, adminOnly, getAllCustomers);
 router.get("/dashboard", protect, adminOnly, getDashboardStats);
 
 //  Menu
-router.post("/admin/menu/create", protect, adminOnly, upload.single("image"), createMenuItem);
+router.post("/menu/create", protect, adminOnly, upload.single("image"), createMenuItem);
 router.put('/:id', protect, adminOnly, updateMenuItem); 
 router.delete('/:id', protect, adminOnly, deleteMenuItem);
 export default router;
