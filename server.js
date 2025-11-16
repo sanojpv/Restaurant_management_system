@@ -72,7 +72,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import path from "path";
-import { v2 as cloudinary } from 'cloudinary'; // Import cloudinary v2
+import { v2 as cloudinary } from 'cloudinary';
 import connectDB from "./config/database.js";
 
 import adminRoutes from "./routes/adminRouter.js";
@@ -87,7 +87,7 @@ import cartRouter from "./routes/cartRouter.js";
 
 dotenv.config();
 
-// 💡 FIX 1: Configure Cloudinary here immediately after loading .env
+//Configure Cloudinary here immediately after loading .env
 // This prevents crashes (502 errors) when upload.js is initialized or used.
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -103,21 +103,20 @@ const app = express();
 app.use(express.json());
 
 
-// 💡 FIX 2: CORS Configuration to allow frontend access
 const allowedOrigins = ['https://restaurant-management-system-fronte-eight.vercel.app'];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allows requests from the specific frontend, or requests with no origin (like Postman)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
+ origin: function (origin, callback) {
+  // Allows requests from the specific frontend
+  if (!origin || allowedOrigins.includes(origin)) {
+   callback(null, true);
+  } else {
       // Log the disallowed origin for debugging
       console.error(`CORS Blocked: Request from disallowed origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true // Important for sending cookies/tokens
+   callback(new Error('Not allowed by CORS'));
+  }
+ },
+ credentials: true // Important for sending cookies/tokens
 }));
 
 // Routes
