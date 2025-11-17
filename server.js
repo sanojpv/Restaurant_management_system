@@ -72,7 +72,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import path from "path";
-// import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 import connectDB from "./config/database.js";
 
 import adminRoutes from "./routes/adminRouter.js";
@@ -84,12 +84,18 @@ import paymentRoutes from "./routes/paymentRouter.js";
 import reservationRoutes from "./routes/reservationRouter.js";
 import authRouter from "./routes/authRoutes.js";
 import cartRouter from "./routes/cartRouter.js";
-import cloudinary  from "./config/cloudinary.js"
 dotenv.config();
 
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-cloudinary();
+export default cloudinary;
+
+
 
 connectDB();
 
