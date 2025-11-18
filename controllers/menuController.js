@@ -1,14 +1,28 @@
+// controllers/menuController.js
 import Menu from "../models/menu.js";
+import { uploadToImgBB } from "../utils/uploadImgBB.js";
 
 export const createMenuItem = async (req, res) => {
   try {
     const { name, description, price, category } = req.body;
 
+    // multer saved file to disk, available at req.file.path
     if (!req.file) {
       return res.status(400).json({ message: "Image is required" });
     }
 
-const imageUrl = req.file.path;
+    // Upload local file to ImgBB
+    let imageUrl;
+    try {
+      imageUrl = await uploadToImgBB(req.file.path);
+    } catch (uploadErr) {
+      console.error("ImgBB upload error:", uploadErr);
+      // attempt to delete local file if exists
+      try {
+        // fs.unlinkSync(req.file.path) // optional sync delete
+      } catch (e) {}
+      return res.status(500).json({ message: "Image upload failed" });
+    }
 
     const menuItem = await Menu.create({
       name,
@@ -19,7 +33,6 @@ const imageUrl = req.file.path;
     });
 
     res.status(201).json(menuItem);
-
   } catch (error) {
     console.error("Error creating menu item:", error);
     res.status(500).json({ message: "Server error" });
@@ -43,7 +56,14 @@ export const updateMenuItem = async (req, res) => {
     const updateFields = { name, description, price, category };
 
     if (req.file) {
-      updateFields.image = req.file.path; // Cloudinary URL
+      // upload new image to ImgBB
+      try {
+        const newImageUrl = await uploadToImgBB(req.file.path);
+        updateFields.image = newImageUrl;
+      } catch (err) {
+        console.error("ImgBB upload error on update:", err);
+        return res.status(500).json({ message: "Image upload failed" });
+      }
     }
 
     const updatedMenuItem = await Menu.findByIdAndUpdate(id, updateFields, {
@@ -55,7 +75,6 @@ export const updateMenuItem = async (req, res) => {
     }
 
     res.status(200).json(updatedMenuItem);
-
   } catch (error) {
     console.error("Error updating menu item:", error);
     res.status(500).json({ message: "Server error" });
@@ -70,7 +89,6 @@ export const deleteMenuItem = async (req, res) => {
     if (!deletedItem) return res.status(404).json({ message: "Not found" });
 
     res.status(200).json({ message: "Menu item deleted" });
-
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
@@ -82,7 +100,6 @@ export const getMenuItemById = async (req, res) => {
     if (!menuItem) return res.status(404).json({ message: "Not found" });
 
     res.status(200).json(menuItem);
-
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
@@ -103,15 +120,10 @@ export const updateAvailability = async (req, res) => {
       return res.status(404).json({ message: "Menu item not found" });
 
     res.status(200).json(updatedItem);
-
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
-
-
 
 
 

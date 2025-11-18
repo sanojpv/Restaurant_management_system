@@ -136,7 +136,7 @@
 
 
 
-import 'dotenv/config'; // 👈 ഏറ്റവും പ്രധാനപ്പെട്ട മാറ്റം
+import 'dotenv/config'; 
 import express from "express";
 import cors from "cors";
 import connectDB from "./config/database.js";
