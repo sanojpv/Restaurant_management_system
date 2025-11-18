@@ -154,7 +154,7 @@ import cartRouter from "./routes/cartRouter.js";
 connectDB();
 
 const app = express();
-
+app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: "https://restaurant-management-system-fronte-eight.vercel.app",
