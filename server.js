@@ -158,7 +158,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: "https://restaurant-management-system-fronte-eight.vercel.app",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT","PATCH", "DELETE"],
     credentials: true,
   })
 );
